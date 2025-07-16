@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMD Kenya - YTD Management Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23ffffff" opacity="0.1"/></svg>') repeat;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-100px); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e3c72;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #2a5298;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo {
+            display: inline-block;
+            background: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+            margin-top: 10px;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0066CC;
+            letter-spacing: 2px;
+        }
+
+        .logo-subtitle {
+            font-size: 0.9rem;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #2a5298;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab:hover {
+            background: #FFD700;
+            color: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: #FFD700;
+            color: #1e3c72;
+            box-shadow: 0 -5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .nav-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #FFD700;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-tab.active::after {
+            transform: scaleX(1);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #FFD700;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border-radius: 0 15px 0 50px;
+            opacity: 0.1;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .data-table {
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+
+        .data-table tr:hover td {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background-color: #f9f9f9;
+        }
+
+        .positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .percentage {
+            background: #e3f2fd;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.2);
+        }
+
+        .recommendation-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .warning-card {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            color: #212529;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(255, 193, 7, 0.2);
+        }
+
+        .warning-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+            
+            .nav-tab {
+                min-width: 150px;
+                padding: 15px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .slide-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .slide-container:hover {
+            transform: translateY(-2px);
+        }
+
+        .slide-title {
+            font-size: 1.6rem;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>Good Morning Management</h1>
+            <p>Here is the Year-to-Date Report for July 2025</p>
+            <div class="logo">
+                <div class="logo-text">TMD</div>
+                <div class="logo-subtitle">KENYA</div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('overview')">Executive Overview</button>
+            <button class="nav-tab" onclick="showTab('branch')">Branch Analysis</button>
+            <button class="nav-tab" onclick="showTab('model')">Model Performance</button>
+            <button class="nav-tab" onclick="showTab('bank')">Bank Partnerships</button>
+            <button class="nav-tab" onclick="showTab('ceo')">CEO Performance</button>
+            <button class="nav-tab" onclick="showTab('recommendations')">Strategic Insights</button>
+        </div>
+
+        <div class="content">
+            <!-- Executive Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="slide-container">
+                    <h2 class="slide-title">Executive Summary - Critical Performance Indicators</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-value">483</div>
+                            <div class="metric-label">Total Confirmed Deals YTD 2025</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">524</div>
+                            <div class="metric-label">Total Deals 2024</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">-7.8%</div>
+                            <div class="metric-label">YoY Decline</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">29.2%</div>
+                            <div class="metric-label">Overall Target Achievement</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">1,173</div>
+                            <div class="metric-label">Deals Short of Target</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">70.8%</div>
+                            <div class="metric-label">Target Shortfall</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container">
+                    <h2 class="slide-title">Performance Trends & Critical Analysis</h2>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Branch Performance vs Target 2025</h3>
+                            <canvas id="yearComparisonChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="chart-title">Top vs Bottom Performers</h3>
+                            <canvas id="branchOverviewChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="warning-card">
+                    <h3>🚨 CRITICAL BUSINESS ALERT</h3>
+                    <p><strong>Severe Underperformance:</strong> Only 29.2% of annual target achieved with 70.8% shortfall (1,173 deals). 
+                    <strong>NEW FREELANCE</strong> at crisis level (5.1% achievement) and <strong>SUPPORT TEAM</strong> carrying disproportionate load without formal targets.</p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>⚡ IMMEDIATE ACTION REQUIRED</h3>
+                    <p><strong>Resource Reallocation:</strong> Deploy support resources from over-performing SUPPORT TEAM to struggling branches. 
+                    <strong>Emergency Intervention:</strong> NEW FREELANCE requires immediate management attention and resource injection.</p>
+                </div>
+            </div>
+
+            <!-- Branch Analysis Tab -->
+            <div id="branch" class="tab-content">
+                <div class="slide-container">
+                    <h2 class="slide-title">Branch Performance Analysis</h2>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Branch Achievement vs Target 2025</h3>
+                            <canvas id="branchTargetChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="chart-title">Branch Performance Ranking</h3>
+                            <canvas id="branchRankingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container">
+                    <h2 class="slide-title">Branch Target Achievement Summary</h2>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Branch</th>
+                                    <th>2025 Target</th>
+                                    <th>2025 Achievement</th>
+                                    <th>Variance</th>
+                                    <th>% Achieved</th>
+                                    <th>Performance Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>OLD FREELANCE</strong></td>
+                                    <td>408</td>
+                                    <td>158</td>
+                                    <td class="negative">-250</td>
+                                    <td><span class="percentage">38.7%</span></td>
+                                    <td class="positive">TOP PERFORMER</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>MACHAKOS</strong></td>
+                                    <td>132</td>
+                                    <td>47</td>
+                                    <td class="negative">-85</td>
+                                    <td><span class="percentage">35.6%</span></td>
+                                    <td class="positive">GOOD</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>KARATINA</strong></td>
+                                    <td>84</td>
+                                    <td>25</td>
+                                    <td class="negative">-59</td>
+                                    <td><span class="percentage">29.8%</span></td>
+                                    <td>AVERAGE</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TWO RIVERS</strong></td>
+                                    <td>132</td>
+                                    <td>34</td>
+                                    <td class="negative">-98</td>
+                                    <td><span class="percentage">25.8%</span></td>
+                                    <td>BELOW TARGET</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>ATHI RIVER</strong></td>
+                                    <td>132</td>
+                                    <td>33</td>
+                                    <td class="negative">-99</td>
+                                    <td><span class="percentage">25.0%</span></td>
+                                    <td>BELOW TARGET</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>FLEET</strong></td>
+                                    <td>180</td>
+                                    <td>39</td>
+                                    <td class="negative">-141</td>
+                                    <td><span class="percentage">21.7%</span></td>
+                                    <td class="negative">POOR</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>KITUI</strong></td>
+                                    <td>72</td>
+                                    <td>12</td>
+                                    <td class="negative">-60</td>
+                                    <td><span class="percentage">16.7%</span></td>
+                                    <td class="negative">POOR</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>THIKA</strong></td>
+                                    <td>108</td>
+                                    <td>16</td>
+                                    <td class="negative">-92</td>
+                                    <td><span class="percentage">14.8%</span></td>
+                                    <td class="negative">CRITICAL</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>NEW FREELANCE</strong></td>
+                                    <td>408</td>
+                                    <td>21</td>
+                                    <td class="negative">-387</td>
+                                    <td><span class="percentage">5.1%</span></td>
+                                    <td class="negative">CRISIS</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SUPPORT TEAM</strong></td>
+                                    <td>-</td>
+                                    <td>98</td>
+                                    <td class="positive">+98</td>
+                                    <td><span class="percentage">N/A</span></td>
+                                    <td class="positive">EXCELLENT</td>
+                                </tr>
+                                <tr style="background-color: #f0f8ff; font-weight: bold;">
+                                    <td><strong>GRAND TOTAL</strong></td>
+                                    <td><strong>1,656</strong></td>
+                                    <td><strong>483</strong></td>
+                                    <td class="negative"><strong>-1,173</strong></td>
+                                    <td><span class="percentage"><strong>29.2%</strong></span></td>
+                                    <td class="negative"><strong>UNDERPERFORMING</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>✅ Branch Excellence Recognition</h3>
+                    <p><strong>OLD FREELANCE</strong> leading with 38.7% achievement (158/408 target) despite 29.4% YoY decline. 
+                    <strong>MACHAKOS</strong> shows remarkable growth (+27.0% YoY) and strong target achievement (35.6%).</p>
+                </div>
+
+                <div class="warning-card">
+                    <h3>🚨 Critical Branch Interventions Required</h3>
+                    <p><strong>NEW FREELANCE:</strong> Crisis-level performance at 5.1% (21/408 target) - requires immediate emergency support.
+                    <strong>THIKA:</strong> Severe decline (-44.8% YoY) with only 14.8% target achievement.
+                    <strong>KITUI:</strong> Minimal improvement (+140% YoY) but still critically low at 16.7% achievement.</p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>💡 Strategic Insights</h3>
+                    <p><strong>SUPPORT TEAM Anomaly:</strong> 98 deals with no formal target (+46.3% YoY growth) suggests untapped potential.
+                    <strong>KARATINA Success:</strong> Strong turnaround with +56.3% YoY growth, achieving 29.8% of target.
+                    <strong>Resource Imbalance:</strong> SUPPORT TEAM and OLD FREELANCE handling 49.1% of total deals - need better distribution.</p>
+                </div>
+            </div>
+
+            <!-- Model Analysis Tab -->
+            <div id="model" class="tab-content">
+                <div class="slide-container">
+                    <h2 class="slide-title">Vehicle Model Performance</h2>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Top 10 Models - 2024 vs 2025</h3>
+                            <canvas id="modelComparisonChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="chart-title">Model Distribution 2025</h3>
+                            <canvas id="modelDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container">
+                    <h2 class="slide-title">Model Performance Details</h2>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>2024 Sales</th>
+                                    <th>2025 Sales</th>
+                                    <th>Change</th>
+                                    <th>% Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modelTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>✅ Model Performance Champions</h3>
+                    <p><strong>NQR-COWL(33 BUS):</strong> Exceptional growth (+121.1% YoY) from 38 to 84 units - clear market winner.
+                    <strong>FVR 90L TRUCK:</strong> Strong growth (+40.0% YoY) indicating emerging market demand.
+                    <strong>FRR 90N TRUCK:</strong> Remains volume leader with 177 units despite -17.3% decline.</p>
+                </div>
+
+                <div class="warning-card">
+                    <h3>⚠️ Declining Model Performance</h3>
+                    <p><strong>TFR 86 S/C:</strong> Severe decline (-55.4% YoY) from 65 to 29 units - investigate market factors.
+                    <strong>FRR 90N BUS:</strong> Significant drop (-29.4% YoY) from 17 to 12 units.
+                    <strong>FVZ 34T-TRUCK:</strong> Declining (-27.3% YoY) from 11 to 8 units.</p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>📊 Market Intelligence</h3>
+                    <p><strong>Bus Segment Opportunity:</strong> NQR-COWL(33 BUS) explosive growth suggests strong public transport demand.
+                    <strong>Truck Segment Stability:</strong> FRR 90N TRUCK maintains dominance with 36.6% market share.
+                    <strong>Portfolio Diversification:</strong> Need to capitalize on high-growth segments while addressing declining models.</p>
+                </div>
+            </div>
+
+            <!-- Bank Partnerships Tab -->
+            <div id="bank" class="tab-content">
+                <div class="slide-container">
+                    <h2 class="slide-title">Banking Partnership Analysis</h2>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Top Banking Partners</h3>
+                            <canvas id="bankPartnerChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="chart-title">Financing Mix 2025</h3>
+                            <canvas id="financingMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container">
+                    <h2 class="slide-title">Bank Performance Metrics</h2>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Bank/Institution</th>
+                                    <th>2024 Deals</th>
+                                    <th>2025 Deals</th>
+                                    <th>Change</th>
+                                    <th>Market Share 2025</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bankTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>✅ Banking Partnership Successes</h3>
+                    <p><strong>Co-operative Bank:</strong> Remarkable growth (+89.4% YoY) from 66 to 125 deals - now second-largest partner.
+                    <strong>ABSA BANK:</strong> Strong growth (+80.0% YoY) from 10 to 18 deals.
+                    <strong>Kenya Commercial Bank:</strong> Solid growth (+25.9% YoY) from 27 to 34 deals.</p>
+                </div>
+
+                <div class="warning-card">
+                    <h3>🚨 Critical Banking Relationships</h3>
+                    <p><strong>NCBA BANK:</strong> Severe decline (-54.8% YoY) from 135 to 61 deals - major concern for largest partner.
+                    <strong>Equity Bank:</strong> Significant drop (-14.7% YoY) from 95 to 81 deals.
+                    <strong>CASH Deals:</strong> Declining (-37.8% YoY) from 82 to 51 - financing accessibility issues.</p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>💰 Financial Partnership Strategy</h3>
+                    <p><strong>Partnership Diversification:</strong> Strong growth in Co-operative Bank reduces over-dependence on NCBA.
+                    <strong>Financing Mix:</strong> 89.4% bank-financed vs 10.6% cash deals shows healthy financing ecosystem.
+                    <strong>Relationship Management:</strong> Urgent need to address NCBA Bank relationship decline and leverage Co-op Bank success.</p>
+                </div>
+            </div>
+
+            <!-- CEO Performance Tab -->
+            <div id="ceo" class="tab-content">
+                <div class="slide-container">
+                    <h2 class="slide-title">CEO & Regional Performance</h2>
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3 class="chart-title">Top 15 CEO Performance</h3>
+                            <canvas id="ceoPerformanceChart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3 class="chart-title">CEO Performance Distribution</h3>
+                            <canvas id="ceoDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slide-container">
+                    <h2 class="slide-title">Individual CEO Performance Rankings</h2>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>CEO Name</th>
+                                    <th>2024 Performance</th>
+                                    <th>2025 Performance</th>
+                                    <th>Total Deals</th>
+                                    <th>YoY Change</th>
+                                    <th>Performance Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ceoTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>🏆 Individual CEO Excellence</h3>
+                    <p><strong>KIM NDERITU:</strong> Outstanding growth (+65.0% YoY) from 40 to 66 deals - top individual performer.
+                    <strong>JOHN MUIA:</strong> Exceptional improvement (+88.9% YoY) from 9 to 17 deals.
+                    <strong>MARYANNE MWITI:</strong> New high-performer with 17 deals in 2025.</p>
+                </div>
+
+                <div class="warning-card">
+                    <h3>⚠️ CEO Performance Concerns</h3>
+                    <p><strong>BEATRICE KARIUKI:</strong> Significant decline (-55.2% YoY) from 58 to 26 deals - requires support.
+                    <strong>SAMUEL MUCHINA:</strong> Major drop (-60.0% YoY) from 15 to 6 deals.
+                    <strong>STEPHEN MAINA:</strong> Concerning decline (-62.5% YoY) from 16 to 6 deals.</p>
+                </div>
+
+                <div class="recommendation-card">
+                    <h3>💡 CEO Development Insights</h3>
+                    <p><strong>Top Growth Leaders:</strong> JOHN MUIA (+88.9%), KIM NDERITU (+65.0%), and PATRICK MUSYOKA (+550.0%) show exceptional leadership growth.
+                    <strong>Consistent Performers:</strong> ALEX MACHARIA and JOEL MURIITHI maintain stable performance.
+                    <strong>Mentorship Opportunities:</strong> Pair declining performers with growth leaders for knowledge transfer.</p>
+                </div>
+            </div>
+
+            <!-- Strategic Insights Tab -->
+            <div id="recommendations" class="tab-content">
+                <div class="slide-container">
+                    <h2 class="slide-title">Strategic Recommendations & Emergency Action Plan</h2>
+                    
+                    <div class="warning-card">
+                        <h3>🚨 IMMEDIATE CRISIS INTERVENTIONS (Next 30 Days)</h3>
+                        <ul>
+                            <li><strong>NEW FREELANCE Emergency Support:</strong> Deploy 2-3 senior executives from SUPPORT TEAM to NEW FREELANCE immediately - current 5.1% achievement is catastrophic</li>
+                            <li><strong>THIKA Leadership Restructure:</strong> Replace underperforming leadership (-44.8% YoY decline) with proven performers from MACHAKOS</li>
+                            <li><strong>NCBA Bank Relationship Recovery:</strong> Senior management meeting with NCBA (-54.8% decline) to address relationship issues</li>
+                            <li><strong>FLEET Operations Audit:</strong> Investigate 51.3% YoY decline - potential operational or market issues</li>
+                        </ul>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <h3>📈 STRATEGIC GROWTH INITIATIVES (Next 90 Days)</h3>
+                        <ul>
+                            <li><strong>SUPPORT TEAM Expansion Model:</strong> Formalize SUPPORT TEAM structure with dedicated targets and replicate across all regions</li>
+                            <li><strong>Bus Segment Acceleration:</strong> Capitalize on NQR-COWL(33 BUS) +121% growth - increase production and marketing investment</li>
+                            <li><strong>Co-operative Bank Partnership:</strong> Expand relationship with Co-op Bank (+89.4% growth) for exclusive financing packages</li>
+                            <li><strong>MACHAKOS Success Replication:</strong> Transfer MACHAKOS turnaround strategies to KITUI and THIKA</li>
+                        </ul>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <h3>🎯 OPERATIONAL EXCELLENCE PROGRAM (Next 180 Days)</h3>
+                        <ul>
+                            <li><strong>Workload Rebalancing:</strong> Redistribute deals from over-performing regions (OLD FREELANCE, SUPPORT TEAM) to build capacity in struggling branches</li>
+                            <li><strong>Leadership Development:</strong> Implement mentorship program pairing high-performers with struggling branch leaders</li>
+                            <li><strong>Model Portfolio Optimization:</strong> Phase out declining models (TFR 86 S/C -55.4%) and focus on growth segments</li>
+                            <li><strong>Regional Specialization:</strong> Assign specific model focus to each region based on local market strengths</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-card">
+                        <h3>⚠️ CRITICAL RISK MITIGATION</h3>
+                        <ul>
+                            <li><strong>Target Recalibration:</strong> Current 29.2% achievement rate indicates unrealistic targets - reassess and adjust</li>
+                            <li><strong>Talent Retention:</strong> OLD FREELANCE showing decline despite being top performer - address burnout and resource constraints</li>
+                            <li><strong>Market Positioning:</strong> 7.8% YoY decline suggests market share loss - competitive analysis required</li>
+                            <li><strong>Financial Diversification:</strong> Reduce dependence on single banking partners - accelerate new partnership development</li>
+                        </ul>
+                    </div>
+
+                    <div class="slide-container">
+                        <h2 class="slide-title">Performance Scorecard & KPIs</h2>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-value">38.7%</div>
+                                <div class="metric-label">Best Branch Performance (OLD FREELANCE)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 38.7%">TOP PERFORMER</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">5.1%</div>
+                                <div class="metric-label">Worst Branch Performance (NEW FREELANCE)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 5.1%; background: #dc3545">CRISIS LEVEL</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">121%</div>
+                                <div class="metric-label">Best Model Growth (NQR-COWL Bus)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%">MARKET LEADER</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">89%</div>
+                                <div class="metric-label">Best Bank Growth (Co-op Bank)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 89%">STRATEGIC PARTNER</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">46%</div>
+                                <div class="metric-label">Support Team Growth</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 46%">EXCELLENCE MODEL</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">1,173</div>
+                                <div class="metric-label">Deals Gap to Target</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 29.2%; background: #ff6b6b">URGENT ACTION</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> plans for underperforming branches</li>
+                            <li><strong>Resource Reallocation:</strong> Consider redistributing resources from SUPPORT TEAM's excess performance to struggling branches</li>
+                        </ul>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <h3>📈 Growth Opportunities</h3>
+                        <ul>
+                            <li><strong>Bus Segment Expansion:</strong> NQR-COWL(33 BUS) shows 121% growth - scale up production and marketing</li>
+                            <li><strong>Co-operative Bank Partnership:</strong> Leverage 89% growth in Co-op Bank relationship for expanded financing options</li>
+                            <li><strong>SUPPORT TEAM Model:</strong> Replicate SUPPORT TEAM's successful strategies across other regions</li>
+                        </ul>
+                    </div>
+
+                    <div class="warning-card">
+                        <h3>⚠️ Risk Mitigation</h3>
+                        <ul>
+                            <li><strong>NCBA Bank Decline:</strong> Address 55% decline in NCBA Bank partnerships - investigate causes and solutions</li>
+                            <li><strong>TFR 86 S/C Decline:</strong> Investigate 55% drop in TFR 86 S/C model sales</li>
+                            <li><strong>Overall Performance Gap:</strong> Close 13.8% YoY performance gap through targeted interventions</li>
+                        </ul>
+                    </div>
+
+                    <div class="slide-container">
+                        <h2 class="slide-title">Performance Scorecard</h2>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-value">38.7%</div>
+                                <div class="metric-label">Best Branch Performance (OLD FREELANCE)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 38.7%">38.7%</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">89%</div>
+                                <div class="metric-label">Best Bank Growth (Co-op Bank)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 89%">+89%</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">121%</div>
+                                <div class="metric-label">Best Model Growth (NQR-COWL Bus)</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%">+121%</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value">46%</div>
+                                <div class="metric-label">Support Team Growth</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 46%">+46%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Accurate data from the management report
+        const dashboardData = {
+            branches: [
+                {name: "OLD FREELANCE", target: 408, achievement: 158, variance: -250, percentage: "38.7%", deals2024: 197, deals2025: 139},
+                {name: "MACHAKOS", target: 132, achievement: 47, variance: -85, percentage: "35.6%", deals2024: 37, deals2025: 47},
+                {name: "KARATINA", target: 84, achievement: 25, variance: -59, percentage: "29.8%", deals2024: 16, deals2025: 25},
+                {name: "TWO RIVERS", target: 132, achievement: 34, variance: -98, percentage: "25.8%", deals2024: 37, deals2025: 34},
+                {name: "ATHI RIVER", target: 132, achievement: 33, variance: -99, percentage: "25.0%", deals2024: 35, deals2025: 33},
+                {name: "FLEET", target: 180, achievement: 39, variance: -141, percentage: "21.7%", deals2024: 80, deals2025: 39},
+                {name: "KITUI", target: 72, achievement: 12, variance: -60, percentage: "16.7%", deals2024: 5, deals2025: 12},
+                {name: "THIKA", target: 108, achievement: 16, variance: -92, percentage: "14.8%", deals2024: 29, deals2025: 16},
+                {name: "NEW FREELANCE", target: 408, achievement: 21, variance: -387, percentage: "5.1%", deals2024: 1, deals2025: 21},
+                {name: "SUPPORT TEAM", target: 0, achievement: 98, variance: 98, percentage: "N/A", deals2024: 67, deals2025: 98},
+                {name: "KICKER", target: 0, achievement: 19, variance: 0, percentage: "N/A", deals2024: 17, deals2025: 19}
+            ],
+            models: [
+                {model: "FRR 90N TRUCK", year2024: 214, year2025: 177, total: 391},
+                {model: "NQR-COWL(33 BUS)", year2024: 38, year2025: 84, total: 122},
+                {model: "NQR 81K-TRUCK", year2024: 59, year2025: 52, total: 111},
+                {model: "NMR 85H-TRUCK", year2024: 54, year2025: 49, total: 103},
+                {model: "TFR 86 S/C", year2024: 65, year2025: 29, total: 94},
+                {model: "FVZ 34N-TIPPER", year2024: 18, year2025: 17, total: 35},
+                {model: "FRR 90N BUS", year2024: 17, year2025: 12, total: 29},
+                {model: "FVR 90L TRUCK", year2024: 10, year2025: 14, total: 24},
+                {model: "FVZ 34T-TRUCK", year2024: 11, year2025: 8, total: 19},
+                {model: "NQR 81-M(EXTRA)", year2024: 7, year2025: 8, total: 15},
+                {model: "KIPCHOGE", year2024: 8, year2025: 3, total: 11},
+                {model: "TFR 87 S/C", year2024: 0, year2025: 9, total: 9},
+                {model: "FVR 90 TRUCK", year2024: 7, year2025: 0, total: 7},
+                {model: "TFS 86 D/C", year2024: 5, year2025: 2, total: 7},
+                {model: "FVR 90P TRUCK", year2024: 1, year2025: 5, total: 6}
+            ],
+            banks: [
+                {bank: "NCBA BANK", year2024: 135, year2025: 61, total: 196},
+                {bank: "Co-operative Bank of Kenya Ltd.", year2024: 66, year2025: 125, total: 191},
+                {bank: "Equity Bank Ltd.", year2024: 95, year2025: 81, total: 176},
+                {bank: "CASH", year2024: 82, year2025: 51, total: 133},
+                {bank: "Kenya Commercial Bank Ltd.", year2024: 27, year2025: 34, total: 61},
+                {bank: "Family Bank Ltd.", year2024: 22, year2025: 23, total: 45},
+                {bank: "CfC Stanbic Bank Ltd.", year2024: 22, year2025: 11, total: 33},
+                {bank: "ABSA BANK", year2024: 10, year2025: 18, total: 28},
+                {bank: "Bank of Africa Kenya Ltd.", year2024: 17, year2025: 3, total: 20},
+                {bank: "Diamond Trust Bank (K) Ltd.", year2024: 2, year2025: 16, total: 18}
+            ],
+            ceos: [
+                {ceo: "KIM NDERITU - 0722523086", year2024: 40, year2025: 66, total: 106},
+                {ceo: "BEATRICE KARIUKI - 0710969676", year2024: 58, year2025: 26, total: 84},
+                {ceo: "MONICA MUGURE - 0724273202", year2024: 24, year2025: 17, total: 41},
+                {ceo: "NAOMY MWANGANGI - 0748583458", year2024: 24, year2025: 16, total: 40},
+                {ceo: "LOUIS NDEBU - 0721228906", year2024: 21, year2025: 16, total: 37},
+                {ceo: "SARAH KAMARU - 0701504827", year2024: 22, year2025: 13, total: 35},
+                {ceo: "JAMES KIARIE - 0789506649", year2024: 18, year2025: 15, total: 33},
+                {ceo: "OLIVER MUTAI - 0701505551", year2024: 15, year2025: 11, total: 26},
+                {ceo: "BEATRICE NGIGI - 0701505285", year2024: 15, year2025: 11, total: 26},
+                {ceo: "JOHN MUIA - 0701505936", year2024: 9, year2025: 17, total: 26},
+                {ceo: "STEPHEN MAINA - 0720650165", year2024: 16, year2025: 6, total: 22},
+                {ceo: "PATRICK WANJOHI - 0721312389", year2024: 9, year2025: 12, total: 21},
+                {ceo: "SAMUEL MUCHINA - 0728498633", year2024: 15, year2025: 6, total: 21},
+                {ceo: "MARYANNE MWITI - 0721431700", year2024: 0, year2025: 17, total: 17},
+                {ceo: "ALEX MACHARIA- 0799488721", year2024: 8, year2025: 8, total: 16},
+                {ceo: "PHIDES MUTHONI - 0722985782", year2024: 12, year2025: 4, total: 16},
+                {ceo: "PATRICK MUSYOKA - 0745247455", year2024: 2, year2025: 13, total: 15},
+                {ceo: "JOAN NYOKABI - 0721927561", year2024: 13, year2025: 2, total: 15},
+                {ceo: "CHARLES NDIRANGU - 0711140780", year2024: 11, year2025: 4, total: 15},
+                {ceo: "MICHAEL MURIITHI - 0725563228", year2024: 10, year2025: 3, total: 13},
+                {ceo: "ROBINSON KINYUA - 0726338482", year2024: 8, year2025: 4, total: 12},
+                {ceo: "BETH WAHU - 0713636802", year2024: 5, year2025: 7, total: 12},
+                {ceo: "DOUGLAS K. KIMITI - 0721-892565", year2024: 9, year2025: 3, total: 12},
+                {ceo: "PAUL KARANJA - 0726104564", year2024: 5, year2025: 6, total: 11},
+                {ceo: "JACKSON GACHERU - 0791706851", year2024: 7, year2025: 4, total: 11},
+                {ceo: "DAN NJOROGE THUMBI - 0728110083", year2024: 6, year2025: 4, total: 10},
+                {ceo: "JOEL MURIITHI - 0769815923", year2024: 5, year2025: 5, total: 10},
+                {ceo: "SAMUEL KILONZO - 0795220700", year2024: 3, year2025: 7, total: 10},
+                {ceo: "ISABEL KIBUGI - 0708925041", year2024: 4, year2025: 6, total: 10}
+            ],
+            totals: {
+                deals2024: 524,
+                deals2025: 483,
+                totalTarget2025: 1656,
+                overallAchievement: 29.2
+            }
+        };
+
+        // Function to show specific tab
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Initialize charts for the active tab
+            setTimeout(() => initializeCharts(tabName), 100);
+        }
+
+        // Initialize charts based on active tab
+        function initializeCharts(tabName) {
+            switch(tabName) {
+                case 'overview':
+                    createYearComparisonChart();
+                    createBranchOverviewChart();
+                    break;
+                case 'branch':
+                    createBranchTargetChart();
+                    createBranchRankingChart();
+                    populateBranchTable();
+                    break;
+                case 'model':
+                    createModelComparisonChart();
+                    createModelDistributionChart();
+                    populateModelTable();
+                    break;
+                case 'bank':
+                    createBankPartnerChart();
+                    createFinancingMixChart();
+                    populateBankTable();
+                    break;
+                case 'ceo':
+                    createCeoPerformanceChart();
+                    createCeoDistributionChart();
+                    populateCeoTable();
+                    break;
+            }
+        }
+
+        // Chart creation functions with accurate data
+        function createYearComparisonChart() {
+            const ctx = document.getElementById('yearComparisonChart');
+            if (!ctx) return;
+            
+            const branchesWithTargets = dashboardData.branches.filter(b => b.target > 0);
+            const labels = branchesWithTargets.map(b => b.name);
+            const targets = branchesWithTargets.map(b => b.target);
+            const achievements = branchesWithTargets.map(b => b.achievement);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '2025 Target',
+                            data: targets,
+                            backgroundColor: '#1e3c72',
+                            borderColor: '#1e3c72',
+                            borderWidth: 2
+                        },
+                        {
+                            label: '2025 Achievement',
+                            data: achievements,
+                            backgroundColor: '#FFD700',
+                            borderColor: '#FFA500',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Branch Performance vs Target 2025'
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBranchOverviewChart() {
+            const ctx = document.getElementById('branchOverviewChart');
+            if (!ctx) return;
+            
+            const topPerformers = dashboardData.branches
+                .filter(b => b.target > 0)
+                .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage))
+                .slice(0, 5);
+            
+            const bottomPerformers = dashboardData.branches
+                .filter(b => b.target > 0)
+                .sort((a, b) => parseFloat(a.percentage) - parseFloat(b.percentage))
+                .slice(0, 4);
+            
+            const combinedData = [...topPerformers, ...bottomPerformers];
+            
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: combinedData.map(b => b.name),
+                    datasets: [{
+                        label: '% Achievement',
+                        data: combinedData.map(b => parseFloat(b.percentage)),
+                        backgroundColor: combinedData.map((b, i) => 
+                            i < 5 ? '#28a745' : '#dc3545'
+                        ),
+                        borderColor: combinedData.map((b, i) => 
+                            i < 5 ? '#28a745' : '#dc3545'
+                        ),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top vs Bottom Performers'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 50
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBranchTargetChart() {
+            const ctx = document.getElementById('branchTargetChart');
+            if (!ctx) return;
+            
+            const branches = dashboardData.branches.filter(b => b.target > 0);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: branches.map(b => b.name),
+                    datasets: [
+                        {
+                            label: 'Target',
+                            data: branches.map(b => b.target),
+                            backgroundColor: '#1e3c72'
+                        },
+                        {
+                            label: 'Achievement',
+                            data: branches.map(b => b.achievement),
+                            backgroundColor: '#FFD700'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBranchRankingChart() {
+            const ctx = document.getElementById('branchRankingChart');
+            if (!ctx) return;
+            
+            const branches = dashboardData.branches
+                .filter(b => b.target > 0)
+                .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage));
+            
+            new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: branches.map(b => b.name),
+                    datasets: [{
+                        label: '% Achievement',
+                        data: branches.map(b => parseFloat(b.percentage)),
+                        backgroundColor: '#28a745'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 50
+                        }
+                    }
+                }
+            });
+        }
+
+        function createModelComparisonChart() {
+            const ctx = document.getElementById('modelComparisonChart');
+            if (!ctx) return;
+            
+            const topModels = dashboardData.models.slice(0, 10);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topModels.map(m => m.model),
+                    datasets: [
+                        {
+                            label: '2024',
+                            data: topModels.map(m => m.year2024),
+                            backgroundColor: '#1e3c72'
+                        },
+                        {
+                            label: '2025',
+                            data: topModels.map(m => m.year2025),
+                            backgroundColor: '#FFD700'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createModelDistributionChart() {
+            const ctx = document.getElementById('modelDistributionChart');
+            if (!ctx) return;
+            
+            const topModels = dashboardData.models.slice(0, 8);
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: topModels.map(m => m.model),
+                    datasets: [{
+                        data: topModels.map(m => m.year2025),
+                        backgroundColor: [
+                            '#1e3c72', '#2a5298', '#FFD700', '#FFA500',
+                            '#28a745', '#20c997', '#6f42c1', '#e83e8c'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createBankPartnerChart() {
+            const ctx = document.getElementById('bankPartnerChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dashboardData.banks.map(b => b.bank),
+                    datasets: [
+                        {
+                            label: '2024',
+                            data: dashboardData.banks.map(b => b.year2024),
+                            backgroundColor: '#1e3c72'
+                        },
+                        {
+                            label: '2025',
+                            data: dashboardData.banks.map(b => b.year2025),
+                            backgroundColor: '#FFD700'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createFinancingMixChart() {
+            const ctx = document.getElementById('financingMixChart');
+            if (!ctx) return;
+            
+            const total2025 = dashboardData.banks.reduce((sum, bank) => sum + bank.year2025, 0);
+            const topBanks = dashboardData.banks
+                .filter(b => b.year2025 > 0)
+                .sort((a, b) => b.year2025 - a.year2025)
+                .slice(0, 6);
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: topBanks.map(b => b.bank),
+                    datasets: [{
+                        data: topBanks.map(b => b.year2025),
+                        backgroundColor: [
+                            '#1e3c72', '#2a5298', '#FFD700', '#FFA500', '#28a745', '#20c997'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCeoPerformanceChart() {
+            const ctx = document.getElementById('ceoPerformanceChart');
+            if (!ctx) return;
+            
+            // Get top 15 CEOs by 2025 performance
+            const topCeos = dashboardData.ceos
+                .sort((a, b) => b.year2025 - a.year2025)
+                .slice(0, 15);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topCeos.map(c => {
+                        const name = c.ceo.split(' - ')[0]; // Remove phone number
+                        return name.length > 15 ? name.substring(0, 15) + '...' : name;
+                    }),
+                    datasets: [
+                        {
+                            label: '2024 Performance',
+                            data: topCeos.map(c => c.year2024),
+                            backgroundColor: '#1e3c72'
+                        },
+                        {
+                            label: '2025 Performance',
+                            data: topCeos.map(c => c.year2025),
+                            backgroundColor: '#FFD700'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top 15 Individual CEO Performance Comparison'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCeoDistributionChart() {
+            const ctx = document.getElementById('ceoDistributionChart');
+            if (!ctx) return;
+            
+            // Get top 10 CEOs by 2025 performance for pie chart
+            const topCeos = dashboardData.ceos
+                .sort((a, b) => b.year2025 - a.year2025)
+                .slice(0, 10);
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: topCeos.map(c => {
+                        const name = c.ceo.split(' - ')[0];
+                        return name.length > 12 ? name.substring(0, 12) + '...' : name;
+                    }),
+                    datasets: [{
+                        data: topCeos.map(c => c.year2025),
+                        backgroundColor: [
+                            '#1e3c72', '#2a5298', '#FFD700', '#FFA500',
+                            '#28a745', '#20c997', '#6f42c1', '#e83e8c',
+                            '#fd7e14', '#6610f2'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top 10 CEO Performance Distribution 2025'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function populateBranchTable() {
+            const tbody = document.getElementById('branchTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Filter branches with targets and sort by percentage
+            const branchesWithTargets = dashboardData.branches
+                .filter(b => b.target > 0)
+                .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage));
+            
+            branchesWithTargets.forEach(branch => {
+                const row = tbody.insertRow();
+                const percentage = parseFloat(branch.percentage);
+                const yoyChange = branch.deals2024 > 0 ? 
+                    ((branch.deals2025 - branch.deals2024) / branch.deals2024 * 100).toFixed(1) : 'N/A';
+                
+                let status = 'Critical';
+                let statusClass = 'negative';
+                
+                if (percentage > 35) {
+                    status = 'Excellent';
+                    statusClass = 'positive';
+                } else if (percentage > 25) {
+                    status = 'Good';
+                    statusClass = '';
+                } else if (percentage > 15) {
+                    status = 'Below Target';
+                    statusClass = '';
+                }
+                
+                row.innerHTML = `
+                    <td><strong>${branch.name}</strong></td>
+                    <td>${branch.target.toLocaleString()}</td>
+                    <td>${branch.achievement.toLocaleString()}</td>
+                    <td class="${branch.variance >= 0 ? 'positive' : 'negative'}">${branch.variance >= 0 ? '+' : ''}${branch.variance.toLocaleString()}</td>
+                    <td><span class="percentage">${branch.percentage}</span></td>
+                    <td class="${statusClass}">${status}</td>
+                `;
+            });
+        }
+
+        function populateModelTable() {
+            const tbody = document.getElementById('modelTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Sort models by 2025 performance
+            const sortedModels = [...dashboardData.models].sort((a, b) => b.year2025 - a.year2025);
+            
+            sortedModels.forEach(model => {
+                const row = tbody.insertRow();
+                const change = model.year2025 - model.year2024;
+                const percentChange = model.year2024 > 0 ? 
+                    ((change / model.year2024) * 100).toFixed(1) : 'N/A';
+                
+                row.innerHTML = `
+                    <td><strong>${model.model}</strong></td>
+                    <td>${model.year2024.toLocaleString()}</td>
+                    <td>${model.year2025.toLocaleString()}</td>
+                    <td class="${change >= 0 ? 'positive' : 'negative'}">${change >= 0 ? '+' : ''}${change.toLocaleString()}</td>
+                    <td class="${percentChange >= 0 ? 'positive' : 'negative'}">${percentChange >= 0 ? '+' : ''}${percentChange}%</td>
+                `;
+            });
+        }
+
+        function populateBankTable() {
+            const tbody = document.getElementById('bankTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            const total2025 = dashboardData.banks.reduce((sum, bank) => sum + bank.year2025, 0);
+            
+            // Sort banks by 2025 performance
+            const sortedBanks = [...dashboardData.banks].sort((a, b) => b.year2025 - a.year2025);
+            
+            sortedBanks.forEach(bank => {
+                const row = tbody.insertRow();
+                const change = bank.year2025 - bank.year2024;
+                const marketShare = ((bank.year2025 / total2025) * 100).toFixed(1);
+                const percentChange = bank.year2024 > 0 ? 
+                    ((change / bank.year2024) * 100).toFixed(1) : 'N/A';
+                
+                row.innerHTML = `
+                    <td><strong>${bank.bank}</strong></td>
+                    <td>${bank.year2024.toLocaleString()}</td>
+                    <td>${bank.year2025.toLocaleString()}</td>
+                    <td class="${change >= 0 ? 'positive' : 'negative'}">${change >= 0 ? '+' : ''}${change.toLocaleString()}</td>
+                    <td><span class="percentage">${marketShare}%</span></td>
+                `;
+            });
+        }
+
+        function populateCeoTable() {
+            const tbody = document.getElementById('ceoTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Sort CEOs by 2025 performance (descending)
+            const sortedCeos = [...dashboardData.ceos].sort((a, b) => b.year2025 - a.year2025);
+            
+            sortedCeos.forEach(ceo => {
+                const row = tbody.insertRow();
+                const change = ceo.year2025 - ceo.year2024;
+                const percentChange = ceo.year2024 > 0 ? 
+                    ((change / ceo.year2024) * 100).toFixed(1) : 
+                    (ceo.year2025 > 0 ? 'New' : '0.0');
+                
+                let trend = '➡️ Stable';
+                let trendClass = '';
+                
+                if (change > 5) {
+                    trend = '🚀 Excellent Growth';
+                    trendClass = 'positive';
+                } else if (change > 0) {
+                    trend = '📈 Growing';
+                    trendClass = 'positive';
+                } else if (change < -5) {
+                    trend = '📉 Significant Decline';
+                    trendClass = 'negative';
+                } else if (change < 0) {
+                    trend = '📉 Declining';
+                    trendClass = 'negative';
+                }
+                
+                const changeText = change >= 0 ? `+${change}` : change.toString();
+                const percentText = percentChange === 'New' ? 'New' : 
+                    (percentChange >= 0 ? `+${percentChange}%` : `${percentChange}%`);
+                
+                row.innerHTML = `
+                    <td><strong>${ceo.ceo}</strong></td>
+                    <td>${ceo.year2024.toLocaleString()}</td>
+                    <td>${ceo.year2025.toLocaleString()}</td>
+                    <td>${ceo.total.toLocaleString()}</td>
+                    <td class="${change >= 0 ? 'positive' : 'negative'}">${changeText} (${percentText})</td>
+                    <td class="${trendClass}">${trend}</td>
+                `;
+            });
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize overview charts on page load
+            setTimeout(() => {
+                createYearComparisonChart();
+                createBranchOverviewChart();
+            }, 500);
+            
+            // Add smooth scrolling
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelector('.content').scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // Add loading animation
+            const cards = document.querySelectorAll('.metric-card, .chart-container, .slide-container');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+
+        // Add interactivity to metric cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const metricCards = document.querySelectorAll('.metric-card');
+            metricCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.background = 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)';
+                });
+            });
+        });
+
+        // Add responsive chart resizing
+        window.addEventListener('resize', function() {
+            Chart.instances.forEach(chart => {
+                chart.resize();
+            });
+        });
+
+        // Add print functionality
+        function printReport() {
+            window.print();
+        }
+
+        // Add export functionality (placeholder)
+        function exportToPDF() {
+            alert('Export to PDF functionality would be implemented here');
+        }
+
+        // Enhanced performance metrics calculation
+        function calculatePerformanceMetrics() {
+            const total2024 = dashboardData.models.reduce((sum, model) => sum + model.year2024, 0);
+            const total2025 = dashboardData.models.reduce((sum, model) => sum + model.year2025, 0);
+            const yoyGrowth = ((total2025 - total2024) / total2024 * 100).toFixed(1);
+            
+            const branchesOnTarget = dashboardData.branches.filter(b => parseFloat(b.percentage) > 30).length;
+            const totalBranches = dashboardData.branches.filter(b => b.target > 0).length;
+            
+            return {
+                total2024: total2024,
+                total2025: total2025,
+                yoyGrowth: yoyGrowth,
+                branchesOnTarget: branchesOnTarget,
+                totalBranches: totalBranches,
+                targetAchievementRate: ((branchesOnTarget / totalBranches) * 100).toFixed(1)
+            };
+        }
+
+        // Dynamic data refresh functionality
+        function refreshData() {
+            // This would normally fetch new data from the server
+            console.log('Refreshing data...');
+            
+            // Add loading indicator
+            const refreshButton = document.createElement('button');
+            refreshButton.innerHTML = '🔄 Refreshing...';
+            refreshButton.style.position = 'fixed';
+            refreshButton.style.top = '20px';
+            refreshButton.style.right = '20px';
+            refreshButton.style.padding = '10px 20px';
+            refreshButton.style.background = '#FFD700';
+            refreshButton.style.border = 'none';
+            refreshButton.style.borderRadius = '25px';
+            refreshButton.style.fontWeight = 'bold';
+            refreshButton.style.zIndex = '1000';
+            
+            document.body.appendChild(refreshButton);
+            
+            setTimeout(() => {
+                refreshButton.innerHTML = '✅ Updated';
+                setTimeout(() => {
+                    document.body.removeChild(refreshButton);
+                }, 2000);
+            }, 3000);
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        showTab('overview');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        showTab('branch');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        showTab('model');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        showTab('bank');
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        showTab('ceo');
+                        break;
+                    case '6':
+                        e.preventDefault();
+                        showTab('recommendations');
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        printReport();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        refreshData();
+                        break;
+                }
+            }
+        });
+
+        // Add tooltips to charts
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(30, 60, 114, 0.9)';
+        Chart.defaults.plugins.tooltip.titleColor = '#FFD700';
+        Chart.defaults.plugins.tooltip.bodyColor = '#ffffff';
+        Chart.defaults.plugins.tooltip.borderColor = '#FFD700';
+        Chart.defaults.plugins.tooltip.borderWidth = 2;
+        Chart.defaults.plugins.tooltip.cornerRadius = 10;
+
+        // Performance monitoring
+        const performanceMetrics = calculatePerformanceMetrics();
+        console.log('Dashboard Performance Metrics:', performanceMetrics);
+
+        // Add smooth transitions for all interactive elements
+        const style = document.createElement('style');
+        style.textContent = `
+            .metric-card, .chart-container, .slide-container {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .nav-tab {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .data-table tr {
+                transition: background-color 0.2s ease;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            .metric-card:hover {
+                animation: pulse 0.6s ease-in-out;
+            }
+            
+            @media print {
+                .nav-tabs { display: none; }
+                .tab-content { display: block !important; }
+                body { background: white; }
+                .dashboard-container { box-shadow: none; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
